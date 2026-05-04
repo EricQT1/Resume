@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>钱天翼 (Eric) - 游戏科学项目管理</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Cinzel:wght@500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg-primary: #0a0b10;
+    --bg-secondary: #12141c;
+    --bg-card: rgba(18, 20, 28, 0.88);
+    --gold: #c9a227;
+    --gold-light: #e8c547;
+    --gold-dim: #8a7019;
+    --text-primary: #e8e6e3;
+    --text-secondary: #9a9590;
+    --text-muted: #605d58;
+    --accent-blue: #4a7fb5;
+    --accent-red: #b54a4a;
+    --border-color: rgba(201,162,39,0.2);
+    --glow-gold: rgba(201,162,39,0.15);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  /* ===== BODY & BACKGROUND ===== */
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Noto Sans SC', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background image layer - always fully visible, black bars when aspect ratio differs */
+  .bg-img-container {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    z-index: -3;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .bg-img-container img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    filter: brightness(0.58) contrast(1.1) saturate(0.88);
+  }
+
+  /* Gradient overlay layer */
+  .bg-layer {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    z-index: -2;
+    background-image:
+      linear-gradient(180deg, rgba(10,11,16,0.22) 0%, rgba(10,11,16,0.22) 100%),
+      linear-gradient(180deg,
+        rgba(10,11,16,0.22) 0%,
+        rgba(10,11,16,0.32) 20%,
+        rgba(10,11,16,0.55) 42%,
+        rgba(10,11,16,0.75) 62%,
+        rgba(10,11,16,0.86) 85%,
+        rgba(10,11,16,0.90) 100%
+      ),
+      radial-gradient(ellipse at 50% 15%, rgba(201,162,39,0.10) 0%, transparent 50%);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  /* Noise texture */
+  body::after {
+    content: '';
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: -1;
+  }
+
+  /* ===== WIDER CONTAINER ===== */
+  .container {
+    max-width: 1200px; margin: 0 auto; padding: 40px 36px;
+    position: relative; z-index: 1;
+  }
+
+  /* ===== SCROLL ANIMATIONS ===== */
+  .fade-section {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+  .fade-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fade-section { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ===== NAV BAR (Sticky) ===== */
+  .nav-bar {
+    position: sticky; top:0; z-index: 50;
+    background: rgba(10,11,16,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 0;
+    transition: all 0.3s;
+  }
+  .nav-bar.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.4); }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto; padding: 0 36px;
+    display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+  }
+  .nav-link {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    color: var(--text-muted); text-decoration: none;
+    padding: 5px 14px; border-radius: 4px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    transition: all 0.25s;
+    border: 1px solid transparent;
+  }
+  .nav-link:hover {
+    color: var(--gold); border-color: var(--border-color);
+    background: rgba(201,162,39,0.05);
+  }
+  .nav-link.active {
+    color: var(--gold); border-color: var(--gold-dim);
+    background: rgba(201,162,39,0.08);
+  }
+
+  /* ===== HERO HEADER ===== */
+  .hero {
+    text-align: center; padding: 48px 0 36px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 38px; position: relative;
+    background: radial-gradient(ellipse at 50% 80%, rgba(10,11,16,0.38) 0%, transparent 70%);
+  }
+
+  .hero::after {
+    content: ''; position: absolute; bottom:-1px; left:50%; transform: translateX(-50%);
+    width: 260px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  }
+
+  .name {
+    font-family: 'Cinzel', serif;
+    font-size: 46px; font-weight: 900; letter-spacing: 8px;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dim));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 8px;
+    text-shadow: 0 0 60px var(--glow-gold);
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+  }
+
+  .title-sub {
+    font-size: 14px; color: var(--text-secondary); letter-spacing: 4px;
+    text-transform: uppercase; margin-bottom: 20px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+  }
+
+  .contact-bar {
+    display: flex; justify-content: center; gap: 28px; flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+  .contact-item { display: flex; align-items: center; gap: 6px; }
+  .contact-icon { color: var(--gold); font-size: 14px; }
+
+  .mbti-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(201,162,39,0.18), rgba(201,162,39,0.06));
+    border: 1px solid var(--gold-dim); border-radius: 4px;
+    padding: 4px 14px; font-size: 11px; color: var(--gold);
+    letter-spacing: 2px; margin-left: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ===== SECTION HEADERS ===== */
+  .section { margin-bottom: 38px; scroll-margin-top: 60px; }
+
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 18px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color); position: relative;
+  }
+  .section-header::after {
+    content:''; position:absolute; bottom:-1px; left:0;
+    width:72px; height:1px; background: var(--gold);
+  }
+
+  .section-num {
+    font-family:'Cinzel',serif; font-size:17px; font-weight:700;
+    color:var(--gold-dim); min-width:32px;
+  }
+  .section-title {
+    font-size:16px; font-weight:700; letter-spacing:4px;
+    text-transform:uppercase; color:var(--text-primary);
+  }
+
+  /* ===== SUMMARY ===== */
+  .summary {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 6px; padding: 24px 28px; margin-bottom: 38px;
+    position: relative; overflow: hidden; backdrop-filter: blur(8px);
+  }
+  .summary::before {
+    content:''; position:absolute; top:0; left:0; width:3px; height:100%;
+    background: linear-gradient(180deg, var(--gold), transparent);
+  }
+  .summary-text { font-size: 13.5px; color: var(--text-secondary); line-height: 1.85; }
+  .highlight { color: var(--gold-light); font-weight: 600; }
+
+  /* ===== WORK EXPERIENCE ===== */
+  .job { margin-bottom: 32px; }
+  .job-header {
+    display:flex; justify-content:space-between; align-items:baseline;
+    flex-wrap:wrap; gap:10px; margin-bottom:4px;
+  }
+  .company-name { font-size:15px; font-weight:700; color:var(--gold-light); }
+  .job-role { font-size:13.5px; font-weight:600; color:var(--text-primary); }
+  .job-meta {
+    font-family:'JetBrains Mono',monospace; font-size:11.5px;
+    color:var(--text-muted); margin-bottom:12px;
+  }
+  .job-tag {
+    display:inline-block; background:rgba(74,127,181,0.12);
+    border:1px solid rgba(74,127,181,0.28); border-radius:3px;
+    padding:2px 10px; font-size:10.5px; color:var(--accent-blue);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .project { margin-bottom:20px; padding-left:18px; border-left:2px solid rgba(201,162,39,0.15); transition: border-color 0.3s; }
+  .project:hover { border-left-color: var(--gold-dim); }
+  .project-name { font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:7px; cursor:default; }
+  .project-name::before { content:'\272F '; color:var(--gold); font-size:14.5px; }
+  .project-desc { font-size:12px; color:var(--text-secondary); line-height:1.8; margin-top:4px; padding-left:2px; }
+
+  /* ===== EDUCATION ===== */
+  .edu-row {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:24px; margin-bottom:18px; padding:18px;
+    background:var(--bg-card); border:1px solid var(--border-color);
+    border-radius:6px; backdrop-filter:blur(8px);
+  }
+  .edu-main { flex:1; }
+  .uni-name { font-size:14.5px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .degree { font-size:13px; color:var(--gold-light); font-weight:500; }
+  .edu-meta { font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-muted); margin-top:5px; }
+  .edu-courses { font-size:11.5px; color:var(--text-secondary); margin-top:7px; line-height:1.55; }
+  .edu-honors { margin-top:7px; font-size:10.5px; color:var(--gold-dim); }
+  .edu-side { text-align:right; min-width:120px; position:relative; display:flex; align-items:center; justify-content:flex-end; gap:12px; }
+  .uni-logo-watermark { width:64px; height:64px; border-radius:50%; object-fit:contain; opacity:0.30; pointer-events:none; flex-shrink:0; }
+  .gpa-display { font-family:'Cinzel',serif; font-size:24px; font-weight:900; color:var(--gold); line-height:1; }
+  .gpa-label { font-size:9px; color:var(--text-muted); letter-spacing:1px; }
+
+  /* ===== RESEARCH ===== */
+  .research-item {
+    margin-bottom:16px; padding:14px 18px;
+    background:var(--bg-card); border:1px solid var(--border-color);
+    border-radius:5px; border-left:2px solid var(--accent-blue);
+    backdrop-filter:blur(8px);
+  }
+  .research-title { font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+  .research-meta { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-muted); margin-bottom:6px; }
+  .research-desc { font-size:11.5px; color:var(--text-secondary); line-height:1.65; }
+
+  /* ===== SKILLS ===== */
+  .skill-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px 28px; }
+  .skill-category { display:flex; gap:10px; align-items:flex-start; }
+  .skill-cat-name { font-size:12px; font-weight:700; color:var(--gold); min-width:76px; white-space:nowrap; padding-top:1px; }
+  .skill-items { font-size:12px; color:var(--text-secondary); line-height:1.55; }
+
+  /* ============================================================ */
+  /* ===== GAMING SECTION - COMPLETELY REDESIGNED ===== */
+  /* ============================================================ */
+  .games-section {
+    background: linear-gradient(145deg, rgba(18,20,28,0.92) 0%, rgba(18,20,28,0.65) 100%);
+    border: 1px solid var(--border-color); border-radius: 10px;
+    padding: 28px 30px; position: relative; overflow: hidden;
+    backdrop-filter: blur(20px);
+  }
+
+  /* Gold top accent line */
+  .games-section::after {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold-dim) 20%, var(--gold) 50%, var(--gold-dim) 80%, transparent 100%);
+  }
+
+  .games-summary {
+    font-size: 12.5px; color: var(--text-secondary); margin-bottom: 18px;
+    text-align: center; font-style: italic;
+  }
+  .games-summary strong { color: var(--gold-light); font-style: normal; }
+
+  /* ===== PLATFORM TABS (Functional) ===== */
+  .platform-tabs {
+    display: flex; gap: 12px; margin-bottom: 20px;
+    justify-content: center;
+  }
+  .platform-tab {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 700;
+    padding: 8px 22px; border-radius: 6px; letter-spacing: 1px;
+    color: var(--text-muted); border: 1px solid var(--border-color);
+    background: rgba(10,11,16,0.5);
+    cursor: pointer; user-select: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .platform-tab:hover {
+    color: var(--gold); border-color: var(--gold-dim);
+    background: rgba(201,162,39,0.06);
+    transform: translateY(-1px);
+  }
+  .platform-tab.active {
+    color: var(--gold); border-color: var(--gold);
+    background: linear-gradient(135deg, rgba(201,162,39,0.15), rgba(201,162,39,0.05));
+    box-shadow: 0 0 20px rgba(201,162,39,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .platform-tab .tab-icon { font-size: 15px; }
+  .tab-count {
+    font-size: 9.5px; font-family: 'JetBrains Mono', monospace;
+    background: rgba(201,162,39,0.15); padding: 1px 6px; border-radius: 8px;
+    margin-left: 4px;
+  }
+
+  /* ===== TAB CONTENT ===== */
+  .tab-content {
+    display: none;
+    animation: tabFadeIn 0.35s ease-out;
+  }
+  .tab-content.active { display: block; }
+
+  @keyframes tabFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== GAME CARD GRID (Replacing the broken table) ===== */
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+  }
+
+  .game-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(42,45,56,0.5);
+    border-radius: 6px;
+    cursor: default;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: transparent;
+    transition: background 0.25s;
+  }
+  .game-card:hover {
+    background: rgba(201,162,39,0.06);
+    border-color: rgba(201,162,39,0.2);
+    transform: translateX(4px);
+  }
+  .game-card:hover::before { background: var(--gold-dim); }
+  .game-card.featured:hover {
+    background: rgba(201,162,39,0.1);
+    border-color: rgba(201,162,39,0.35);
+    box-shadow: 0 0 16px rgba(201,162,39,0.08);
+  }
+  .game-card.featured::before { background: var(--gold-dim); }
+
+  .game-rank {
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+    color: var(--text-muted); min-width: 22px; text-align: right;
+    opacity: 0.5;
+    transition: opacity 0.25s;
+  }
+  .game-card:hover .game-rank { opacity: 1; color: var(--gold-dim); }
+
+  .game-info { flex: 1; min-width: 0; }
+  .game-name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .game-card.featured .game-name { color: var(--gold-light); }
+  .game-note { font-size: 10px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .game-hours {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    color: var(--gold-dim);
+    white-space: nowrap;
+    padding: 3px 8px;
+    background: rgba(201,162,39,0.08);
+    border-radius: 4px;
+  }
+
+  /* Stats bar inside games section */
+  .games-stats {
+    display: flex; justify-content: center; gap: 32px;
+    margin-bottom: 18px; padding: 12px 0;
+    border-bottom: 1px solid rgba(42,45,56,0.4);
+  }
+  .stat-item { text-align: center; }
+  .stat-number {
+    font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900;
+    color: var(--gold); line-height: 1;
+    transition: all 0.3s;
+  }
+  .stat-label {
+    font-size: 9px; color: var(--text-muted); letter-spacing: 2px;
+    text-transform: uppercase; margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align:center; padding:28px 0 16px;
+    border-top:1px solid var(--border-color); margin-top:48px;
+    position:relative;
+  }
+  .footer-quote {
+    font-family:'Cinzel',serif; font-size:14px; font-style:italic;
+    color:var(--text-muted); letter-spacing:1.5px;
+  }
+  .footer-quote span { color:var(--gold-dim); }
+
+  /* ===== BACK TO TOP BUTTON ===== */
+  .back-to-top {
+    position: fixed; bottom: 28px; right: 28px; z-index: 100;
+    width: 42px; height: 42px;
+    background: rgba(18,20,28,0.85);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0; pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(16px);
+  }
+  .back-to-top.visible {
+    opacity: 1; pointer-events: auto;
+  }
+  .back-to-top:hover {
+    border-color: var(--gold-dim);
+    background: rgba(201,162,39,0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .back-to-top svg {
+    width: 18px; height: 18px;
+    stroke: var(--gold-dim);
+    stroke-width: 2.5;
+    fill: none;
+    transition: stroke 0.3s;
+  }
+  .back-to-top:hover svg { stroke: var(--gold); }
+
+  /* ===== PROGRESS INDICATOR (top bar) ===== */
+  .progress-bar {
+    position: fixed; top:0; left:0; width:0%; height:2px;
+    z-index: 200;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-light));
+    transition: width 0.05s linear;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media(max-width: 720px) {
+    .container { padding: 24px 18px; max-width: 100%; }
+    .nav-inner { padding: 0 18px; }
+    .name { font-size: 34px; letter-spacing: 4px; }
+    .skill-grid { grid-template-columns: 1fr; }
+    .edu-row { flex-direction: column; }
+    .edu-side { text-align: left; }
+    .job-header { flex-direction: column; }
+    .games-section { padding: 20px 16px; }
+    .game-grid { grid-template-columns: 1fr; }
+    .games-stats { gap: 16px; }
+    .stat-number { font-size: 20px; }
+  }
+
+  @media(min-width: 1400px) {
+    .container { max-width: 1300px; }
+    .nav-inner { max-width: 1300px; }
+  }
+
+  /* ===== ANIMATIONS ===== */
+  .section-header { animation: fadeInUp 0.6s ease both; }
+  .job { animation: fadeInUp 0.6s ease both; }
+  .research-item { animation: fadeInUp 0.6s ease both; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section:nth-child(1) .section-header { animation-delay: 0.05s; }
+  .section:nth-child(2) .section-header { animation-delay: 0.1s; }
+  .section:nth-child(3) .section-header { animation-delay: 0.15s; }
+  .section:nth-child(4) .section-header { animation-delay: 0.2s; }
+  .section:nth-child(5) .section-header { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Background image - always fully visible, black bars when aspect ratio differs -->
+<div class="bg-img-container">
+  <img src="e37e21bee30a11daf2653b3f43f8d2a2fe4a8f014724e-wrHyj9_fw658webp.webp" alt="bg">
+</div>
+
+<!-- Gradient overlay -->
+<div class="bg-layer"></div>
+
+<!-- Sticky Navigation Bar -->
+<nav class="nav-bar" id="navBar">
+  <div class="nav-inner">
+    <a href="#experience" class="nav-link active">Experience</a>
+    <a href="#education" class="nav-link">Education</a>
+    <a href="#research" class="nav-link">Research</a>
+    <a href="#skills" class="nav-link">Skills</a>
+    <a href="#gaming" class="nav-link">Gaming</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Hero Header -->
+  <header class="hero">
+    <div class="name">ERIC QIAN</div>
+    <div class="title-sub">Project Manager Candidate</div>
+    <div class="contact-bar">
+      <span class="contact-item"><span class="contact-icon">&#9742;</span> +86 18710189908</span>
+      <span class="contact-item"><span class="contact-icon">&#9993;</span> qiantianyi1999@hotmail.com</span>
+      <span class="mbti-badge">ISTP</span>
+    </div>
+  </header>
+
+  <!-- Summary -->
+  <div class="section fade-section">
+    <div class="summary">
+      <p class="summary-text">
+        全生命周期项目管理者，擅长将复杂业务需求拆解为可执行流程并跨部门协同推进。<span class="highlight">重度PC/主机游戏玩家（5,400h+）</span>，覆盖MMORPG/大战略/Roguelike等<span class="highlight">15+品类</span>，对游戏系统设计与玩家体验有深度直觉理解。
+        ISTP型人格——善于快速分析问题本质、冷静应对复杂场景、用系统化方法解决实际问题。
+        熟悉TAPD/Jira项目管理工具，具备AI工具链落地经验与中英双语沟通能力；注重文档排版与视觉呈现质量，有Godot引擎初步探索经验（AI辅助脚本调试）。
+      </p>
+    </div>
+  </div>
+
+  <!-- Work Experience -->
+  <div class="section" id="experience">
+    <div class="section-header">
+      <span class="section-num">I</span>
+      <span class="section-title">Work Experience</span>
+    </div>
+
+    <!-- Job 1 -->
+    <div class="job fade-section">
+      <div class="job-header">
+        <span class="company-name">&#9670; 北京律光智能科技有限公司</span>
+        <span class="job-meta">Beijing &middot; Jan. 2026 – Present</span>
+      </div>
+      <div style="margin-bottom:10px"><span class="job-role">商业与战略分析师 | 项目管理</span></div>
+
+      <div class="project">
+        <div class="project-name">企业级AI作业系统部署 — 全生命周期项目管理</div>
+        <p class="project-desc">为重要客户部署定制化AI作业系统，担任从项目启动至商务推广的全周期负责人。组织项目启动会对齐目标；输出《系统标准作业流程框架》统一执行标准；试案阶段建立日报机制全覆盖追踪；试案完毕输出分析报告辅助商务洽谈决策。推动<span class="highlight">3批次成功上线</span>，客户团队已独立操作系统运行；基于项目成果向客户推荐长期合作方案，二期评估已启动。</p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">国企客户AI赋能转型 — 方案设计与落地推进</div>
+        <p class="project-desc">主导某国有银行客户的AI赋能转型方案设计与推进。深入调研业务痛点后输出《对接流程》与《私有化部署流程》；明确<span class="highlight">7周交付周期</span>并拆分阶段性关键节点与验收标准。项目方案已通过客户内部初审，进入落地部署筹备阶段。</p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">知识产权与合规项目管理 — 跨团队进度管控</div>
+        <p class="project-desc">牵头科技资质申报与大模型备案全流程项目管理。规划并监督产品与技术团队的文档准备工作（推进<span class="highlight">8项软著提审+5项发明专利筹备</span>）；主导信息系统安全等级保护测评与大模型备案；建立专项排期表协调内外部会议时间，各环节工作有序推进。</p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">AI垂类应用产品运营 — 需求管理与版本迭代</div>
+        <p class="project-desc">作为基于开源大模型微调的场景化AI应用的产品运营负责人，建立需求池分级管理机制（紧急度/影响面/业务价值三维定优先级）。从业务场景角度收集Bug反馈与功能优化需求，协调技术-产品-客户三方对接。主导<span class="highlight">1个大版本+4次小迭代</span>的全周期更新，仅1次小迭代因需求变更延期1.5天，核心功能交付节奏整体可控。</p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">投融资支持与尽调协作</div>
+        <p class="project-desc">负责融资材料的持续更新与优化。独立搭建财务预测模型与竞品分析报告；协助外部事务所开展尽调工作，参与多家资本方来访会议并根据反馈迭代BP及配套材料；完成英文版翻译与内容强化，直接支撑投融资全过程。</p>
+      </div>
+    </div>
+
+    <!-- Job 2 -->
+    <div class="job fade-section" style="margin-bottom:0">
+      <div class="job-header">
+        <span class="company-name">&#9670; 中信建投证券股份有限公司</span>
+        <span class="job-meta">Beijing &middot; Oct. 2021 – Feb. 2022</span>
+      </div>
+      <div style="margin-bottom:10px">
+        <span class="job-role">投资银行部实习生</span>
+        <span class="job-tag">项目组核心成员 / 实习生团队负责人</span>
+      </div>
+
+      <div class="project">
+        <div class="project-name">实习团队管理与交付品控</div>
+        <p class="project-desc">担任<span class="highlight">6人实习小组</span>负责人，承担团队日常管理工作。负责新人入职培训与任务分配（按能力匹配尽调/底稿/研究模块化分工）；建立交付物验收标准逐份审核组员产出并给出结构化修改反馈；组织终稿讨论会统筹多方意见形成最终汇报材料。团队保持高质量产出，终稿一次性通过率显著提升。</p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">上市公司并购重组 — 资产分析与估值建模</div>
+        <p class="project-desc">深度参与某退市标的并购重组全流程。运用DCF、可比公司分析法进行目标资产抵押分析与估值建模；完成尽调调查底稿整理与核查。输出资产价值核心结论，直接支撑并购方案的搭建与决策。</p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">元宇宙/AR赛道独立研究</div>
+        <p class="project-desc">从零搭建研究框架，覆盖市场分析、行业格局、政策解读与竞品对标四个维度。输出创新地图及产业格局分析报告，被项目组采纳为内部参考资料。熟练使用Wind/Bloomberg进行数据检索与财务建模，具备中英文双语研究报告撰写能力。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Education -->
+  <div class="section" id="education">
+    <div class="section-header">
+      <span class="section-num">II</span>
+      <span class="section-title">Education</span>
+    </div>
+
+    <div class="edu-row fade-section">
+      <div class="edu-main">
+        <div class="uni-name">University of Edinburgh</div>
+        <div class="degree">理学硕士 · 商业分析 (Merit)</div>
+        <div class="edu-meta">Edinburgh, Scotland, U.K. | Sept. 2022 – Jul. 2024</div>
+        <div class="edu-courses">Python编程 · 数据分析原理 · 预测性分析与机器学习 · 产业组织理论 · 随机优化 · 模拟建模与分析</div>
+      </div>
+      <div class="edu-side">
+        <img class="uni-logo-watermark" src="University_of_Edinburgh_ceremonial_roundel.svg.png" alt="UoE" style="width:68px;height:68px;">
+        <div class="gpa-display">Merit</div>
+        <div class="gpa-label">DISTINCTION LEVEL</div>
+      </div>
+    </div>
+
+    <div class="edu-row fade-section" style="margin-bottom:0">
+      <div class="edu-main">
+        <div class="uni-name">University of California, Irvine</div>
+        <div class="degree">双学位 · 理学学士(数学) + 文学学士(经济学)</div>
+        <div class="edu-meta">Irvine, CA, U.S.A. | Sept. 2017 – Jun. 2021</div>
+        <div class="edu-courses">金融数学 · 计量经济学 · 概率论 · 金融模型 · 公司财务</div>
+        <div class="edu-honors">&#9733; Pi Mu Epsilon成员 · Cum Laude · Dean's Honors List &times; 7次</div>
+      </div>
+      <div class="edu-side">
+        <img class="uni-logo-watermark" src="The_University_of_California_Irvine.svg.png" alt="UCI" style="width:54px;height:54px;opacity:0.34;">
+        <div class="gpa-display">3.71</div>
+        <div class="gpa-label">GPA / 4.0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Research -->
+  <div class="section" id="research">
+    <div class="section-header">
+      <span class="section-num">III</span>
+      <span class="section-title">Research Projects</span>
+    </div>
+
+    <div class="research-item fade-section">
+      <div class="research-title">稳定币波动性分析 — Terra-Luna崩盘事件研究</div>
+      <div class="research-meta">University of Edinburgh | Spring 2024</div>
+      <div class="research-desc">以2022年Terra-Luna算法稳定币崩盘事件为切入点，构建技术-市场-监管三维分析框架，运用<span class="highlight">GARCH模型</span>量化评估不同抵押机制稳定币在极端市场事件中的抗风险能力。研究覆盖BTC、ETH及六大主流稳定币（USDT、USDC、BUSD、DAI、UST、PAXG），独立完成CoinAPI数据采集、模型构建与实证分析完整链路。核心发现：资产抵押型稳定币（USDC/USDT）在崩盘期间展现出强抗风险能力；算法稳定币UST的崩盘显著加剧了BTC与ETH的短期波动，但未对传统稳定币造成结构性冲击；黄金锚定型稳定币PAXG在极端事件中与主流加密货币呈现显著协同波动，提示其避险功能存在局限性。</div>
+    </div>
+
+    <div class="research-item fade-section">
+      <div class="research-title">L-3 Communications 股权投资研究</div>
+      <div class="research-meta">UCI | Winter 2021</div>
+      <div class="research-desc">运用CAPM/P/E/EV-EBITDA多重估值方法对NASDAQ上市公司进行投资分析。</div>
+    </div>
+
+    <div class="research-item fade-section" style="margin-bottom:0">
+      <div class="research-title">NLP情感分析与可视化报告</div>
+      <div class="research-meta">Edinburgh | Sem1 2022</div>
+      <div class="research-desc">基于API数据采集，运用Pandas/Numpy清洗建模，应用词云与语义情感分析生成可视化报告。</div>
+    </div>
+  </div>
+
+  <!-- Skills -->
+  <div class="section" id="skills">
+    <div class="section-header">
+      <span class="section-num">IV</span>
+      <span class="section-title">Skills</span>
+    </div>
+    <div class="skill-grid">
+      <div class="skill-category">
+        <span class="skill-cat-name">项目管理</span>
+        <span class="skill-items">TAPD &middot; Jira &middot; 敏捷迭代 &middot; 全生命周期管理 &middot; 跨部门协同 &middot; 风险识别 &middot; 文档排版与视觉呈现</span>
+      </div>
+      <div class="skill-category">
+        <span class="skill-cat-name">数据分析</span>
+        <span class="skill-items">Python (Pandas/Numpy/sklearn) &middot; SQL &middot; STATA &middot; Excel高级功能</span>
+      </div>
+      <div class="skill-category">
+        <span class="skill-cat-name">AI 工具</span>
+        <span class="skill-items">本地部署OpenClaw &middot; 飞书Agent搭建 &middot; AI辅助检索与结构化写作 &middot; Godot引擎初步探索（AI辅助脚本调试）</span>
+      </div>
+      <div class="skill-category">
+        <span class="skill-cat-name">语言</span>
+        <span class="skill-items">英语流利（海外留学背景）&middot; 跨国团队协作经验</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gaming Experience -->
+  <div class="section" id="gaming">
+    <div class="section-header">
+      <span class="section-num">V</span>
+      <span class="section-title">Gaming Experience</span>
+    </div>
+
+    <div class="games-section fade-section">
+
+      <!-- Animated stats bar -->
+      <div class="games-stats">
+        <div class="stat-item">
+          <div class="stat-number" data-target="5400">0</div>
+          <div class="stat-label">Total Hours</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" data-target="15" data-suffix="+">0</div>
+          <div class="stat-label">Genres</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" data-target="2" data-suffix="">0</div>
+          <div class="stat-label">Platforms</div>
+        </div>
+      </div>
+
+      <p class="games-summary">
+        覆盖 MMORPG / MOBA / FPS / 大战略 / 动作RPG / JRPG / Roguelike / 策略模拟 等 <strong>15+ 品类</strong>
+      </p>
+
+      <!-- Functional Platform Tabs -->
+      <div class="platform-tabs">
+        <button class="platform-tab active" data-tab="pc">
+          <span class="tab-icon">&#127905;</span> PC Platform<span class="tab-count">64</span>
+        </button>
+        <button class="platform-tab" data-tab="ns">
+          <span class="tab-icon">&#128105;&#65039;</span> Nintendo Switch<span class="tab-count">11</span>
+        </button>
+      </div>
+
+      <!-- PC Games Content -->
+      <div class="tab-content active" id="tab-pc">
+        <div class="game-grid">
+          <div class="game-card featured">
+            <span class="game-rank">#01</span>
+            <div class="game-info">
+              <div class="game-name">魔兽世界</div>
+              <div class="game-note">团本指挥 x2 版本</div>
+            </div>
+            <span class="game-hours">1000h+</span>
+          </div>
+          <div class="game-card featured">
+            <span class="game-rank">#02</span>
+            <div class="game-info">
+              <div class="game-name">全面战争：战锤2</div>
+            </div>
+            <span class="game-hours">807+h</span>
+          </div>
+          <div class="game-card featured">
+            <span class="game-rank">#03</span>
+            <div class="game-info">
+              <div class="game-name">PUBG</div>
+            </div>
+            <span class="game-hours">630+h</span>
+          </div>
+          <div class="game-card featured">
+            <span class="game-rank">#04</span>
+            <div class="game-info">
+              <div class="game-name">风暴英雄</div>
+            </div>
+            <span class="game-hours">500h+</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#05</span>
+            <div class="game-info">
+              <div class="game-name">博得之门 3</div>
+            </div>
+            <span class="game-hours">326h+</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#06</span>
+            <div class="game-info">
+              <div class="game-name">怪物猎人：世界</div>
+            </div>
+            <span class="game-hours">131+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#07</span>
+            <div class="game-info">
+              <div class="game-name">FFXIV</div>
+            </div>
+            <span class="game-hours">300h+</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#08</span>
+            <div class="game-info">
+              <div class="game-name">Dota 2</div>
+            </div>
+            <span class="game-hours">268+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#09</span>
+            <div class="game-info">
+              <div class="game-name">文明 6</div>
+            </div>
+            <span class="game-hours">258+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#10</span>
+            <div class="game-info">
+              <div class="game-name">全面战争：三国</div>
+            </div>
+            <span class="game-hours">222+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#11</span>
+            <div class="game-info">
+              <div class="game-name">永劫无间</div>
+            </div>
+            <span class="game-hours">200h+</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#12</span>
+            <div class="game-info">
+              <div class="game-name">Limbus Company</div>
+            </div>
+            <span class="game-hours">197+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#13</span>
+            <div class="game-info">
+              <div class="game-name">The Bazaar</div>
+            </div>
+            <span class="game-hours">193+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#14</span>
+            <div class="game-info">
+              <div class="game-name">神界：原罪2</div>
+            </div>
+            <span class="game-hours">160+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#15</span>
+            <div class="game-info">
+              <div class="game-name">雀魂</div>
+            </div>
+            <span class="game-hours">155+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#16</span>
+            <div class="game-info">
+              <div class="game-name">战锤40K: 行商浪人</div>
+            </div>
+            <span class="game-hours">138+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#17</span>
+            <div class="game-info">
+              <div class="game-name">Gloomhaven</div>
+            </div>
+            <span class="game-hours">117+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#18</span>
+            <div class="game-info">
+              <div class="game-name">全面战争：战锤3</div>
+            </div>
+            <span class="game-hours">100+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#19</span>
+            <div class="game-info">
+              <div class="game-name">Wallpaper Engine</div>
+            </div>
+            <span class="game-hours">84+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#20</span>
+            <div class="game-info">
+              <div class="game-name">Melvor Idle</div>
+            </div>
+            <span class="game-hours">81+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#21</span>
+            <div class="game-info">
+              <div class="game-name">战锤40K: 暗潮</div>
+            </div>
+            <span class="game-hours">73+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#22</span>
+            <div class="game-info">
+              <div class="game-name">Pillars of Eternity II</div>
+            </div>
+            <span class="game-hours">67+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#23</span>
+            <div class="game-info">
+              <div class="game-name">夜族崛起</div>
+            </div>
+            <span class="game-hours">63+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#24</span>
+            <div class="game-info">
+              <div class="game-name">FFXV</div>
+            </div>
+            <span class="game-hours">60+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#25</span>
+            <div class="game-info">
+              <div class="game-name">末世鼠疫 2</div>
+            </div>
+            <span class="game-hours">58+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#26</span>
+            <div class="game-info">
+              <div class="game-name">为了吾王</div>
+            </div>
+            <span class="game-hours">57+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#27</span>
+            <div class="game-info">
+              <div class="game-name">王国两位君主</div>
+            </div>
+            <span class="game-hours">57+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#28</span>
+            <div class="game-info">
+              <div class="game-name">Mount & Blade II</div>
+            </div>
+            <span class="game-hours">54+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#29</span>
+            <div class="game-info">
+              <div class="game-name">Northgard</div>
+            </div>
+            <span class="game-hours">53+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#30</span>
+            <div class="game-info">
+              <div class="game-name">Inkbound</div>
+            </div>
+            <span class="game-hours">53+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#31</span>
+            <div class="game-info">
+              <div class="game-name">暗喻幻想: ReFantazio</div>
+            </div>
+            <span class="game-hours">52+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#32</span>
+            <div class="game-info">
+              <div class="game-name">33号远征队</div>
+            </div>
+            <span class="game-hours">40+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#33</span>
+            <div class="game-info">
+              <div class="game-name">Slay the Spire</div>
+            </div>
+            <span class="game-hours">49+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#34</span>
+            <div class="game-info">
+              <div class="game-name">巫师 3</div>
+            </div>
+            <span class="game-hours">48+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#35</span>
+            <div class="game-info">
+              <div class="game-name">Slay the Spire 2</div>
+            </div>
+            <span class="game-hours">47+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#36</span>
+            <div class="game-info">
+              <div class="game-name">永恒轮回</div>
+            </div>
+            <span class="game-hours">46+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#37</span>
+            <div class="game-info">
+              <div class="game-name">阿尔比恩Online</div>
+            </div>
+            <span class="game-hours">46+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#38</span>
+            <div class="game-info">
+              <div class="game-name">赛菲莉娅</div>
+            </div>
+            <span class="game-hours">43+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#39</span>
+            <div class="game-info">
+              <div class="game-name">雨中冒险 2</div>
+            </div>
+            <span class="game-hours">41+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#40</span>
+            <div class="game-info">
+              <div class="game-name">了不起的修仙模拟器</div>
+            </div>
+            <span class="game-hours">40+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#41</span>
+            <div class="game-info">
+              <div class="game-name">Across the Obelisk</div>
+            </div>
+            <span class="game-hours">38+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#42</span>
+            <div class="game-info">
+              <div class="game-name">太吾绘卷</div>
+            </div>
+            <span class="game-hours">35+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#43</span>
+            <div class="game-info">
+              <div class="game-name">神之天平</div>
+            </div>
+            <span class="game-hours">32+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#44</span>
+            <div class="game-info">
+              <div class="game-name">艾尔登法环</div>
+            </div>
+            <span class="game-hours">31+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#45</span>
+            <div class="game-info">
+              <div class="game-name">刺客信条奥德赛</div>
+            </div>
+            <span class="game-hours">28+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#46</span>
+            <div class="game-info">
+              <div class="game-name">霓虹深渊2</div>
+            </div>
+            <span class="game-hours">28+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#47</span>
+            <div class="game-info">
+              <div class="game-name">Wartales</div>
+            </div>
+            <span class="game-hours">25+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#48</span>
+            <div class="game-info">
+              <div class="game-name">古剑奇谭网络版</div>
+            </div>
+            <span class="game-hours">25+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#49</span>
+            <div class="game-info">
+              <div class="game-name">Palworld</div>
+            </div>
+            <span class="game-hours">25+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#50</span>
+            <div class="game-info">
+              <div class="game-name">Hades II</div>
+            </div>
+            <span class="game-hours">23+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#51</span>
+            <div class="game-info">
+              <div class="game-name">无人深空</div>
+            </div>
+            <span class="game-hours">22+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#52</span>
+            <div class="game-info">
+              <div class="game-name">歧路旅人 II</div>
+            </div>
+            <span class="game-hours">20+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#53</span>
+            <div class="game-info">
+              <div class="game-name">女神异闻录5 Royal</div>
+            </div>
+            <span class="game-hours">40+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#54</span>
+            <div class="game-info">
+              <div class="game-name">只狼</div>
+            </div>
+            <span class="game-hours">19+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#55</span>
+            <div class="game-info">
+              <div class="game-name">宿命残响</div>
+            </div>
+            <span class="game-hours">19+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#56</span>
+            <div class="game-info">
+              <div class="game-name">雾锁王国</div>
+            </div>
+            <span class="game-hours">18+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#57</span>
+            <div class="game-info">
+              <div class="game-name">命运2</div>
+            </div>
+            <span class="game-hours">18+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#58</span>
+            <div class="game-info">
+              <div class="game-name">Lethal Company</div>
+            </div>
+            <span class="game-hours">17+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#59</span>
+            <div class="game-info">
+              <div class="game-name">Waven</div>
+            </div>
+            <span class="game-hours">17+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#60</span>
+            <div class="game-info">
+              <div class="game-name">战锤40K: 混沌之门</div>
+            </div>
+            <span class="game-hours">16+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#61</span>
+            <div class="game-info">
+              <div class="game-name">战地1</div>
+            </div>
+            <span class="game-hours">15+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#62</span>
+            <div class="game-info">
+              <div class="game-name">卧龙</div>
+            </div>
+            <span class="game-hours">11+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#63</span>
+            <div class="game-info">
+              <div class="game-name">双人成行</div>
+            </div>
+            <span class="game-hours">20+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#64</span>
+            <div class="game-info">
+              <div class="game-name">双影奇境</div>
+            </div>
+            <span class="game-hours">13+h</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nintendo Switch Games Content -->
+      <div class="tab-content" id="tab-ns">
+        <div class="game-grid">
+          <div class="game-card featured">
+            <span class="game-rank">#01</span>
+            <div class="game-info">
+              <div class="game-name">火焰纹章系列</div>
+            </div>
+            <span class="game-hours">200h+</span>
+          </div>
+          <div class="game-card featured">
+            <span class="game-rank">#02</span>
+            <div class="game-info">
+              <div class="game-name">塞尔达传说: 荒野之息</div>
+            </div>
+            <span class="game-hours">120h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#03</span>
+            <div class="game-info">
+              <div class="game-name">异度神剑 2&amp;3</div>
+            </div>
+            <span class="game-hours">150h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#04</span>
+            <div class="game-info">
+              <div class="game-name">马里奥网球</div>
+              <div class="game-note">&#11088; 美服排名前300</div>
+            </div>
+            <span class="game-hours">150h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#05</span>
+            <div class="game-info">
+              <div class="game-name">王国之泪</div>
+            </div>
+            <span class="game-hours">50+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#06</span>
+            <div class="game-info">
+              <div class="game-name">空洞骑士 &amp; 丝之歌</div>
+            </div>
+            <span class="game-hours">80h+</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#07</span>
+            <div class="game-info">
+              <div class="game-name">圣兽之王</div>
+            </div>
+            <span class="game-hours">30+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#08</span>
+            <div class="game-info">
+              <div class="game-name">怪物猎人：崛起</div>
+            </div>
+            <span class="game-hours">100h+</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#09</span>
+            <div class="game-info">
+              <div class="game-name">三角战略</div>
+            </div>
+            <span class="game-hours">30+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#10</span>
+            <div class="game-info">
+              <div class="game-name">斯普拉遁3</div>
+            </div>
+            <span class="game-hours">30+h</span>
+          </div>
+          <div class="game-card">
+            <span class="game-rank">#11</span>
+            <div class="game-info">
+              <div class="game-name">女神异闻录5 Strikers</div>
+            </div>
+            <span class="game-hours">30+h</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p class="footer-quote">"<span>&#9830;</span> Driven by data, Inspired by arts <span>&#9830;</span>"</p>
+  </footer>
+
+</div>
+
+<!-- Back to Top Button -->
+<button class="back-to-top" id="backToTop" title="回到顶部">
+  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
+
+<script>
+// ===== 1. FADE-IN ON SCROLL =====
+const fadeObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      fadeObserver.unobserve(entry.target);
+
+      // Trigger stat counter animation when gaming section appears
+      if (entry.target.querySelector('.stat-number')) {
+        animateStats();
+      }
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.fade-section').forEach(function(el) {
+  fadeObserver.observe(el);
+});
+
+// ===== 2. PROGRESS BAR =====
+const progressBar = document.getElementById('progressBar');
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  progressBar.style.width = progress + '%';
+}, { passive: true });
+
+// ===== 3. STICKY NAV - ACTIVE LINK HIGHLIGHTING =====
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+const navBar = document.getElementById('navBar');
+
+function updateActiveNav() {
+  const scrollPos = window.scrollY + 100;
+
+  sections.forEach(function(section) {
+    const top = section.offsetTop;
+    const height = section.offsetHeight;
+    const id = section.getAttribute('id');
+
+    if (scrollPos >= top && scrollPos < top + height) {
+      navLinks.forEach(function(link) {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + id) {
+          link.classList.add('active');
+        }
+      });
+    }
+  });
+
+  // Nav shadow on scroll
+  if (window.scrollY > 50) {
+    navBar.classList.add('scrolled');
+  } else {
+    navBar.classList.remove('scrolled');
+  }
+}
+
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+
+// ===== 4. BACK TO TOP BUTTON =====
+const backToTop = document.getElementById('backToTop');
+window.addEventListener('scroll', function() {
+  if (window.scrollY > 400) {
+    backToTop.classList.add('visible');
+  } else {
+    backToTop.classList.remove('visible');
+  }
+}, { passive: true });
+
+backToTop.addEventListener('click', function() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ===== 5. PLATFORM TAB SWITCHING =====
+const tabs = document.querySelectorAll('.platform-tab');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabs.forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    const targetId = this.getAttribute('data-tab');
+
+    // Update tabs
+    tabs.forEach(function(t) { t.classList.remove('active'); });
+    this.classList.add('active');
+
+    // Update content with animation
+    tabContents.forEach(function(content) {
+      content.classList.remove('active');
+    });
+    document.getElementById('tab-' + targetId).classList.add('active');
+  });
+});
+
+// ===== 6. STAT COUNTER ANIMATION =====
+let statsAnimated = false;
+
+function animateStats() {
+  if (statsAnimated) return;
+  statsAnimated = true;
+
+  document.querySelectorAll('.stat-number').forEach(function(stat) {
+    const target = parseInt(stat.getAttribute('data-target')) || 0;
+    const suffix = stat.getAttribute('data-suffix') || '';
+    const duration = 1500;
+    const start = performance.now();
+
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(eased * target);
+      stat.textContent = current.toLocaleString() + suffix;
+
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      }
+    }
+    requestAnimationFrame(update);
+  });
+}
+
+// ===== 7. GAME CARD HOVER TILT EFFECT (subtle) =====
+document.querySelectorAll('.game-card').forEach(function(card) {
+  card.addEventListener('mouseenter', function() {
+    this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+  });
+});
+</script>
+
+</body>
+</html>
