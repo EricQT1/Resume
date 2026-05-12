@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单机游戏研发项目管理方案 - 基于TAPD平台</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #21262d;
+            --bg-hover: #30363d;
+            --gold: #ffd700;
+            --gold-dim: #b8960f;
+            --gold-soft: rgba(255, 215, 0, 0.15);
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --border: #30363d;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-purple: #a371f7;
+            --accent-orange: #d29922;
+            --tapd-blue: #0052cc;
+            --tapd-light: #e6f0ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--tapd-blue) 0%, #0065ff 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .logo-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .logo-text span {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+
+        .header-badge {
+            background: var(--gold-soft);
+            border: 1px solid var(--gold-dim);
+            color: var(--gold);
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 65px;
+            z-index: 99;
+        }
+
+        .tab-nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+            padding: 0 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--gold);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--gold);
+            border-radius: 2px;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            margin-left: 1.25rem;
+        }
+
+        /* TAPD Interface Mockup */
+        .tapd-mockup {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .tapd-mockup-header {
+            background: var(--bg-secondary);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .tapd-mockup-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tapd-mockup-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .tapd-mockup-dot.red { background: #ff5f57; }
+        .tapd-mockup-dot.yellow { background: #febc2e; }
+        .tapd-mockup-dot.green { background: #28c840; }
+
+        .tapd-mockup-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .tapd-mockup-body {
+            padding: 1.5rem;
+        }
+
+        /* Sprint Board Mockup */
+        .sprint-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .board-column {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 300px;
+        }
+
+        .board-column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .board-column-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .board-column-count {
+            background: var(--bg-hover);
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .story-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.875rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .story-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .story-card-id {
+            font-size: 0.75rem;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .story-card-title {
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .story-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .story-card-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        .story-card-type.plan { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); }
+        .story-card-type.dev { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); }
+        .story-card-type.art { background: rgba(163, 113, 247, 0.15); color: var(--accent-purple); }
+        .story-card-type.qa { background: rgba(63, 185, 80, 0.15); color: var(--accent-green); }
+
+        .priority-tag {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .priority-tag.p0 { background: rgba(248, 81, 73, 0.2); color: var(--accent-red); }
+        .priority-tag.p1 { background: rgba(210, 153, 34, 0.2); color: var(--accent-orange); }
+        .priority-tag.p2 { background: rgba(139, 148, 158, 0.2); color: var(--text-secondary); }
+
+        /* Sprint Planning Panel */
+        .sprint-panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .sprint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .sprint-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sprint-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .sprint-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .sprint-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .sprint-stat {
+            text-align: center;
+        }
+
+        .sprint-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .sprint-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Burndown Chart */
+        .chart-container {
+            height: 250px;
+            position: relative;
+            margin: 1.5rem 0;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        /* Field Config Cards */
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .field-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .field-card-header {
+            background: var(--bg-secondary);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .field-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .field-card-icon.art { background: rgba(163, 113, 247, 0.2); }
+        .field-card-icon.dev { background: rgba(248, 81, 73, 0.2); }
+        .field-card-icon.plan { background: rgba(88, 166, 255, 0.2); }
+        .field-card-icon.qa { background: rgba(63, 185, 80, 0.2); }
+
+        .field-card-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .field-card-body {
+            padding: 1.25rem;
+        }
+
+        .field-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .field-item:last-child {
+            border-bottom: none;
+        }
+
+        .field-name {
+            font-size: 0.9rem;
+        }
+
+        .field-type {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .field-options {
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            text-align: right;
+            max-width: 180px;
+        }
+
+        /* Timeline */
+        .timeline-container {
+            padding: 2rem 0;
+        }
+
+        .milestone-track {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+        }
+
+        .milestone-track::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .milestone-track::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 5%;
+            width: 35%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-dim));
+            border-radius: 2px;
+        }
+
+        .milestone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .milestone-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 3px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .milestone.completed .milestone-icon {
+            border-color: var(--gold);
+            background: var(--gold);
+        }
+
+        .milestone.current .milestone-icon {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px var(--gold-soft);
+        }
+
+        .milestone-content {
+            text-align: center;
+        }
+
+        .milestone-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .milestone-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .milestone-duration {
+            font-size: 0.75rem;
+            color: var(--gold);
+            background: var(--gold-soft);
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .milestone-detail {
+            margin-top: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .milestone-detail h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--gold);
+        }
+
+        .milestone-detail p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .milestone-detail ul {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding-left: 1.25rem;
+        }
+
+        .milestone-detail li {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Workflow Diagram */
+        .workflow-section {
+            margin-bottom: 2rem;
+        }
+
+        .workflow-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .workflow-title-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-flow {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .flow-node {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .flow-node.start { border-color: var(--accent-blue); background: rgba(88, 166, 255, 0.1); }
+        .flow-node.end { border-color: var(--accent-green); background: rgba(63, 185, 80, 0.1); }
+        .flow-node.mid { border-color: var(--gold-dim); }
+
+        .flow-arrow {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        /* Interactive Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--tapd-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0065ff;
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--text-muted);
+        }
+
+        .btn-gold {
+            background: var(--gold);
+            color: var(--bg-primary);
+        }
+
+        .btn-gold:hover {
+            background: var(--gold-dim);
+        }
+
+        /* Expandable Sections */
+        .expandable {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .expandable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .expandable-header:hover {
+            background: var(--bg-hover);
+        }
+
+        .expandable-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+
+        .expandable-arrow {
+            transition: transform 0.3s;
+        }
+
+        .expandable.open .expandable-arrow {
+            transform: rotate(180deg);
+        }
+
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .expandable.open .expandable-content {
+            max-height: 500px;
+        }
+
+        .expandable-body {
+            padding: 0 1.25rem 1.25rem;
+        }
+
+        /* Task Detail Panel */
+        .task-detail-panel {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 450px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            z-index: 200;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .task-detail-panel.open {
+            right: 0;
+        }
+
+        .task-detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 199;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .task-detail-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .task-detail-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .task-detail-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+
+        .task-detail-body {
+            padding: 1.25rem;
+        }
+
+        .task-detail-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .task-detail-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            background: var(--bg-card);
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .meta-value {
+            font-size: 0.9rem;
+        }
+
+        /* Case Study */
+        .case-study {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .case-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .case-label {
+            display: inline-block;
+            background: var(--gold-soft);
+            color: var(--gold);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .case-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .case-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .case-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .case-stat {
+            background: var(--bg-secondary);
+            padding: 1.25rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .case-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .case-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Best Practices Grid */
+        .practices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .practice-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .practice-card:hover {
+            border-color: var(--gold-dim);
+            transform: translateY(-2px);
+        }
+
+        .practice-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .practice-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .practice-icon.sprint { background: rgba(255, 215, 0, 0.15); }
+        .practice-icon.milestone { background: rgba(88, 166, 255, 0.15); }
+        .practice-icon.collaboration { background: rgba(163, 113, 247, 0.15); }
+        .practice-icon.quality { background: rgba(63, 185, 80, 0.15); }
+        .practice-icon.document { background: rgba(210, 153, 34, 0.15); }
+        .practice-icon.retro { background: rgba(248, 81, 73, 0.15); }
+
+        .practice-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .practice-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sprint-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .case-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sprint-board {
+                grid-template-columns: 1fr;
+            }
+
+            .milestone-track {
+                flex-direction: column;
+                gap: 2rem;
+                align-items: center;
+            }
+
+            .milestone-track::before,
+            .milestone-track::after {
+                display: none;
+            }
+
+            .tab-nav-content {
+                padding: 0;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .case-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .task-detail-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">T</div>
+                <div class="logo-text">
+                    单机游戏研发项目管理方案
+                    <span>基于TAPD平台</span>
+                </div>
+            </div>
+            <div class="header-badge">游戏项目管理实践</div>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+        <div class="tab-nav-content">
+            <button class="tab-btn active" data-tab="overview">总览</button>
+            <button class="tab-btn" data-tab="sprint-board">Sprint看板</button>
+            <button class="tab-btn" data-tab="fields">字段配置</button>
+            <button class="tab-btn" data-tab="lifecycle">研发周期</button>
+            <button class="tab-btn" data-tab="workflow">工作流</button>
+            <button class="tab-btn" data-tab="case">实战案例</button>
+            <button class="tab-btn" data-tab="practices">最佳实践</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Tab 1: Overview -->
+        <div class="tab-content active" id="overview">
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">方案概述</h2>
+                    <p class="section-desc">为单机游戏研发项目设计的TAPD全流程管理方案</p>
+                </div>
+
+                <div class="tapd-mockup">
+                    <div class="tapd-mockup-header">
+                        <div class="tapd-mockup-dots">
+                            <div class="tapd-mockup-dot red"></div>
+                            <div class="tapd-mockup-dot yellow"></div>
+                            <div class="tapd-mockup-dot green"></div>
+                        </div>
+                        <div class="tapd-mockup-title">TAPD - 《黑神话：悟空》研发项目</div>
+                    </div>
+                    <div class="tapd-mockup-body">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-blue);">48</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">总需求数</div>
+                            </div>
+                            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-green);">32</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">已完成</div>
+                            </div>
+                            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.75rem; font-weight: 700; color: var(--gold);">12</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">进行中</div>
+                            </div>
+                            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-red);">4</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">阻塞项</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-grid">
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(88, 166, 255, 0.2);">📊</div>
+                            <div class="field-card-title">迭代管理</div>
+                        </div>
+                        <div class="field-card-body">
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">规划Sprint周期，管理时间盒。通过燃尽图直观呈现剩余工作量，及时识别风险。</p>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">Sprint规划</span>
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">燃尽图</span>
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">速率统计</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(248, 81, 73, 0.2);">📋</div>
+                            <div class="field-card-title">任务管理</div>
+                        </div>
+                        <div class="field-card-body">
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">四象限任务分解，覆盖策划、程序、美术、QA全职能，建立跨团队依赖关系。</p>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">任务分解</span>
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">工时预估</span>
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">指派追踪</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(63, 185, 80, 0.2);">🐛</div>
+                            <div class="field-card-title">缺陷管理</div>
+                        </div>
+                        <div class="field-card-body">
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">全生命周期BUG跟踪，区分缺陷类型和严重级别，确保关键问题优先处理。</p>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">BUG跟踪</span>
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">严重级别</span>
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">回归验证</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(163, 113, 247, 0.2);">📄</div>
+                            <div class="field-card-title">文档管理</div>
+                        </div>
+                        <div class="field-card-body">
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">集中存储需求文档、技术设计、美术规范，建立文档与任务的双向关联。</p>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">需求文档</span>
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">规范库</span>
+                                <span style="background: var(--bg-secondary); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">版本管理</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab 2: Sprint Board -->
+        <div class="tab-content" id="sprint-board">
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Sprint故事墙</h2>
+                    <p class="section-desc">可视化看板追踪各职能任务状态，支持拖拽调整</p>
+                </div>
+
+                <div class="tapd-mockup">
+                    <div class="tapd-mockup-header">
+                        <div class="tapd-mockup-dots">
+                            <div class="tapd-mockup-dot red"></div>
+                            <div class="tapd-mockup-dot yellow"></div>
+                            <div class="tapd-mockup-dot green"></div>
+                        </div>
+                        <div class="tapd-mockup-title">Sprint 12 - 战斗系统优化 · 2026.05.12 - 2026.05.25</div>
+                        <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary">+ 添加故事</button>
+                            <button class="btn btn-secondary">📊 燃尽图</button>
+                        </div>
+                    </div>
+                    <div class="tapd-mockup-body">
+                        <div class="sprint-board">
+                            <div class="board-column">
+                                <div class="board-column-header">
+                                    <div class="board-column-title">📋 待办</div>
+                                    <div class="board-column-count">3</div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task1')">
+                                    <div class="story-card-id">Story #127</div>
+                                    <div class="story-card-title">Boss技能树设计文档V2.0</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type plan">策划</span>
+                                        <span class="priority-tag p1">P1</span>
+                                    </div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task2')">
+                                    <div class="story-card-id">Story #128</div>
+                                    <div class="story-card-title">主角待机动画（8方向）</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type art">美术</span>
+                                        <span class="priority-tag p2">P2</span>
+                                    </div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task3')">
+                                    <div class="story-card-id">Story #129</div>
+                                    <div class="story-card-title">Boss战功能测试用例</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type qa">QA</span>
+                                        <span class="priority-tag p1">P1</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="board-column">
+                                <div class="board-column-header">
+                                    <div class="board-column-title">⚡ 开发中</div>
+                                    <div class="board-column-count">2</div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task4')">
+                                    <div class="story-card-id">Task #156</div>
+                                    <div class="story-card-title">实现格挡反击逻辑</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type dev">程序</span>
+                                        <span class="priority-tag p0">P0</span>
+                                    </div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task5')">
+                                    <div class="story-card-id">Task #157</div>
+                                    <div class="story-card-title">优化角色移动手感</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type dev">程序</span>
+                                        <span class="priority-tag p1">P1</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="board-column">
+                                <div class="board-column-header">
+                                    <div class="board-column-title">🧪 待测试</div>
+                                    <div class="board-column-count">1</div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task6')">
+                                    <div class="story-card-id">Task #158</div>
+                                    <div class="story-card-title">Boss AI行为树重构</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type dev">程序</span>
+                                        <span class="priority-tag p0">P0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="board-column">
+                                <div class="board-column-header">
+                                    <div class="board-column-title">✅ 已完成</div>
+                                    <div class="board-column-count">4</div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task7')">
+                                    <div class="story-card-id">Story #125</div>
+                                    <div class="story-card-title">战斗系统V2.0设计文档</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type plan">策划</span>
+                                        <span class="priority-tag p1">P1</span>
+                                    </div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task8')">
+                                    <div class="story-card-id">Story #124</div>
+                                    <div class="story-card-title">Boss外观终版交付</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type art">美术</span>
+                                        <span class="priority-tag p1">P1</span>
+                                    </div>
+                                </div>
+                                <div class="story-card" onclick="openTaskDetail('task9')">
+                                    <div class="story-card-id">Bug #89</div>
+                                    <div class="story-card-title">修复闪避无敌帧BUG</div>
+                                    <div class="story-card-meta">
+                                        <span class="story-card-type dev">程序</span>
+                                        <span class="priority-tag p0">P0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sprint-panel" style="margin-top: 2rem;">
+                    <div class="sprint-header">
+                        <div class="sprint-info">
+                            <div class="sprint-name">Sprint 12 进度</div>
+                            <div class="sprint-date">Day 5 / 10</div>
+                        </div>
+                        <div class="sprint-stats">
+                            <div class="sprint-stat">
+                                <div class="sprint-stat-value">10</div>
+                                <div class="sprint-stat-label">总任务</div>
+                            </div>
+                            <div class="sprint-stat">
+                                <div class="sprint-stat-value">4</div>
+                                <div class="sprint-stat-label">已完成</div>
+                            </div>
+                            <div class="sprint-stat">
+                                <div class="sprint-stat-value">6</div>
+                                <div class="sprint-stat-label">剩余</div>
+                            </div>
+                            <div class="sprint-stat">
+                                <div class="sprint-stat-value">40%</div>
+                                <div class="sprint-stat-label">进度</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <svg class="chart-svg" viewBox="0 0 600 200">
+                            <!-- Grid lines -->
+                            <line x1="50" y1="20" x2="50" y2="170" stroke="#30363d" stroke-width="1"/>
+                            <line x1="50" y1="170" x2="580" y2="170" stroke="#30363d" stroke-width="1"/>
+                            
+                            <!-- Y-axis labels -->
+                            <text x="40" y="25" fill="#8b949e" font-size="10" text-anchor="end">50</text>
+                            <text x="40" y="72" fill="#8b949e" font-size="10" text-anchor="end">37</text>
+                            <text x="40" y="120" fill="#8b949e" font-size="10" text-anchor="end">25</text>
+                            <text x="40" y="170" fill="#8b949e" font-size="10" text-anchor="end">0</text>
+                            
+                            <!-- Ideal line -->
+                            <polyline points="50,20 116,45 182,70 248,95 314,120 380,145 446,170 512,170 580,170" 
+                                      fill="none" stroke="#8b949e" stroke-width="2" stroke-dasharray="5,5"/>
+                            
+                            <!-- Actual line -->
+                            <polyline points="50,20 116,35 182,55 248,78 314,95 380,110 446,125 512,140" 
+                                      fill="none" stroke="#ffd700" stroke-width="3"/>
+                            
+                            <!-- Data points -->
+                            <circle cx="50" cy="20" r="5" fill="#ffd700"/>
+                            <circle cx="116" cy="35" r="5" fill="#ffd700"/>
+                            <circle cx="182" cy="55" r="5" fill="#ffd700"/>
+                            <circle cx="248" cy="78" r="5" fill="#ffd700"/>
+                            <circle cx="314" cy="95" r="5" fill="#ffd700"/>
+                            <circle cx="380" cy="110" r="5" fill="#ffd700"/>
+                            <circle cx="446" cy="125" r="5" fill="#ffd700"/>
+                            <circle cx="512" cy="140" r="5" fill="#ffd700"/>
+                            
+                            <!-- Current day indicator -->
+                            <line x1="314" y1="20" x2="314" y2="170" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="314" y="188" fill="#58a6ff" font-size="10" text-anchor="middle">今天</text>
+                            
+                            <!-- X-axis labels -->
+                            <text x="50" y="188" fill="#8b949e" font-size="10" text-anchor="middle">D1</text>
+                            <text x="116" y="188" fill="#8b949e" font-size="10" text-anchor="middle">D2</text>
+                            <text x="182" y="188" fill="#8b949e" font-size="10" text-anchor="middle">D3</text>
+                            <text x="248" y="188" fill="#8b949e" font-size="10" text-anchor="middle">D4</text>
+                            <text x="314" y="188" fill="#8b949e" font-size="10" text-anchor="middle">D5</text>
+                            <text x="380" y="188" fill="#8b949e" font-size="10" text-anchor="middle">D6</text>
+                            <text x="446" y="188" fill="#8b949e" font-size="10" text-anchor="middle">D7</text>
+                            <text x="512" y="188" fill="#8b949e" font-size="10" text-anchor="middle">D8</text>
+                        </svg>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ffd700;"></div>
+                            <span>实际进度</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #8b949e;"></div>
+                            <span>理想进度</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab 3: Field Configuration -->
+        <div class="tab-content" id="fields">
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">游戏研发专属字段配置</h2>
+                    <p class="section-desc">针对单机游戏开发特点定制的自定义字段，确保管理精细度</p>
+                </div>
+
+                <div class="field-grid">
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon art">🎨</div>
+                            <div class="field-card-title">美术资产字段</div>
+                        </div>
+                        <div class="field-card-body">
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">资产类型</div>
+                                    <div class="field-type">单选下拉</div>
+                                </div>
+                                <div class="field-options">角色 / 场景 / UI / 特效 / 动画 / 音效</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">资产状态</div>
+                                    <div class="field-type">单选下拉</div>
+                                </div>
+                                <div class="field-options">概念 / 建模 / 贴图 / 绑定 / 动画 / 已验收</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">美术优先级</div>
+                                    <div class="field-type">单选下拉</div>
+                                </div>
+                                <div class="field-options">P0-紧急 / P1-高 / P2-中 / P3-低</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">关联策划案</div>
+                                    <div class="field-type">单行文本</div>
+                                </div>
+                                <div class="field-options">策划文档编号</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon dev">💻</div>
+                            <div class="field-card-title">程序开发字段</div>
+                        </div>
+                        <div class="field-card-body">
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">开发模块</div>
+                                    <div class="field-type">级联单选</div>
+                                </div>
+                                <div class="field-options">引擎 / 游戏逻辑 / UI / 网络 / 工具</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">技术难度</div>
+                                    <div class="field-type">单选下拉</div>
+                                </div>
+                                <div class="field-options">简单 / 中等 / 复杂 / 极难</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">预估工时</div>
+                                    <div class="field-type">数值型（人天）</div>
+                                </div>
+                                <div class="field-options">保留1位小数</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">代码审查状态</div>
+                                    <div class="field-type">单选下拉</div>
+                                </div>
+                                <div class="field-options">待审查 / 已通过 / 需修改</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon plan">📝</div>
+                            <div class="field-card-title">策划文档字段</div>
+                        </div>
+                        <div class="field-card-body">
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">文档类型</div>
+                                    <div class="field-type">单选下拉</div>
+                                </div>
+                                <div class="field-options">核心玩法 / 关卡 / 角色 / 系统 / 剧情</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">设计状态</div>
+                                    <div class="field-type">单选下拉</div>
+                                </div>
+                                <div class="field-options">草稿 / 评审中 / 已批准 / 已实现</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">关联资产需求</div>
+                                    <div class="field-type">多行文本</div>
+                                </div>
+                                <div class="field-options">美术资产清单</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">关联程序需求</div>
+                                    <div class="field-type">多行文本</div>
+                                </div>
+                                <div class="field-options">程序功能清单</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon qa">🧪</div>
+                            <div class="field-card-title">QA测试字段</div>
+                        </div>
+                        <div class="field-card-body">
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">测试类型</div>
+                                    <div class="field-type">多选下拉</div>
+                                </div>
+                                <div class="field-options">功能 / 性能 / 兼容性 / 压力</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">BUG严重程度</div>
+                                    <div class="field-type">单选下拉</div>
+                                </div>
+                                <div class="field-options">致命 / 严重 / 一般 / 轻微 / 建议</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">复现步骤</div>
+                                    <div class="field-type">多行文本</div>
+                                </div>
+                                <div class="field-options">必填项</div>
+                            </div>
+                            <div class="field-item">
+                                <div>
+                                    <div class="field-name">测试环境</div>
+                                    <div class="field-type">单行文本</div>
+                                </div>
+                                <div class="field-options">硬件/OS/版本</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="expandable" id="expandable1">
+                    <div class="expandable-header" onclick="toggleExpand('expandable1')">
+                        <div class="expandable-title">
+                            <span>📋 查看更多：通用项目管理字段</span>
+                        </div>
+                        <div class="expandable-arrow">▼</div>
+                    </div>
+                    <div class="expandable-content">
+                        <div class="expandable-body">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">所属里程碑</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">Vertical Slice / Alpha / Beta / Gold Master</div>
+                                </div>
+                                <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">风险等级</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">高风险 / 中风险 / 低风险 / 无风险</div>
+                                </div>
+                                <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Sprint目标</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">本Sprint的核心目标描述</div>
+                                </div>
+                                <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                                    <div style="font-weight: 600; margin-bottom: 0.5rem;">验收标准</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">Definition of Done</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab 4: Development Lifecycle -->
+        <div class="tab-content" id="lifecycle">
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">单机游戏研发周期</h2>
+                    <p class="section-desc">根据游戏开发生命周期特点，灵活调整Sprint节奏</p>
+                </div>
+
+                <div class="timeline-container">
+                    <div class="milestone-track">
+                        <div class="milestone completed">
+                            <div class="milestone-icon">🎯</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">预制作</div>
+                                <div class="milestone-desc">Vertical Slice</div>
+                                <div class="milestone-duration">1周Sprint</div>
+                            </div>
+                        </div>
+                        <div class="milestone current">
+                            <div class="milestone-icon">⚙️</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">全面制作</div>
+                                <div class="milestone-desc">内容规模化生产</div>
+                                <div class="milestone-duration">2-4周Sprint</div>
+                            </div>
+                        </div>
+                        <div class="milestone">
+                            <div class="milestone-icon">🧪</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">Alpha</div>
+                                <div class="milestone-desc">功能完整性验证</div>
+                                <div class="milestone-duration">2周Sprint</div>
+                            </div>
+                        </div>
+                        <div class="milestone">
+                            <div class="milestone-icon">🎮</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">Beta</div>
+                                <div class="milestone-desc">系统稳定性验证</div>
+                                <div class="milestone-duration">2周Sprint</div>
+                            </div>
+                        </div>
+                        <div class="milestone">
+                            <div class="milestone-icon">🏆</div>
+                            <div class="milestone-content">
+                                <div class="milestone-title">Gold Master</div>
+                                <div class="milestone-desc">达到可发布状态</div>
+                                <div class="milestone-duration">1周Sprint</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-grid" style="margin-top: 2rem;">
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(255, 215, 0, 0.2);">🎯</div>
+                            <div class="field-card-title">Vertical Slice 阶段</div>
+                        </div>
+                        <div class="field-card-body">
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">高频迭代阶段，核心目标验证核心玩法是否有趣、技术是否可行。此阶段允许废弃原型，快速试错。</p>
+                            <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Sprint特点</div>
+                                <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.25rem;">
+                                    <li>Sprint长度：1周</li>
+                                    <li>团队规模：小型核心团队（5-8人）</li>
+                                    <li>验收标准：可玩demo + 玩法评审通过</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(88, 166, 255, 0.2);">⚙️</div>
+                            <div class="field-card-title">全面制作阶段</div>
+                        </div>
+                        <div class="field-card-body">
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">规模化生产阶段，严格按管线推进，按计划完成各模块内容生产。</p>
+                            <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Sprint特点</div>
+                                <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.25rem;">
+                                    <li>Sprint长度：2-4周</li>
+                                    <li>团队规模：完整团队（30-100+人）</li>
+                                    <li>验收标准：完成定义任务 + 通过QA测试</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(63, 185, 80, 0.2);">🧪</div>
+                            <div class="field-card-title">测试阶段</div>
+                        </div>
+                        <div class="field-card-body">
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Alpha到Gold Master，聚焦质量，BUG修复、性能优化、体验打磨。</p>
+                            <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Sprint特点</div>
+                                <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.25rem;">
+                                    <li>Sprint长度：1-2周</li>
+                                    <li>团队规模：全员参与，聚焦质量</li>
+                                    <li>验收标准：BUG收敛、性能达标、无致命问题</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="expandable" id="expandable2">
+                    <div class="expandable-header" onclick="toggleExpand('expandable2')">
+                        <div class="expandable-title">
+                            <span>📋 查看更多：里程碑详细定义</span>
+                        </div>
+                        <div class="expandable-arrow">▼</div>
+                    </div>
+                    <div class="expandable-content">
+                        <div class="expandable-body">
+                            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <div style="font-weight: 600; color: var(--gold); margin-bottom: 0.5rem;">Alpha 版本</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">位置：全面制作阶段末期 | 定义：所有功能开发完成，进入全面测试</div>
+                            </div>
+                            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <div style="font-weight: 600; color: var(--gold); margin-bottom: 0.5rem;">Beta 版本</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">位置：测试阶段中期 | 定义：系统稳定性验证，游戏可完整游玩</div>
+                            </div>
+                            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                                <div style="font-weight: 600; color: var(--gold); margin-bottom: 0.5rem;">Gold Master</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">位置：测试阶段末期 | 定义：达到可发布状态的最终版本</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab 5: Workflow -->
+        <div class="tab-content" id="workflow">
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">工作流状态配置</h2>
+                    <p class="section-desc">针对不同职能定制的多轨工作流，确保流程透明可控</p>
+                </div>
+
+                <div class="workflow-section">
+                    <div class="workflow-title">
+                        <div class="workflow-title-icon" style="background: rgba(88, 166, 255, 0.2);">📋</div>
+                        需求/故事工作流
+                    </div>
+                    <div class="workflow-flow">
+                        <div class="flow-node start">待规划</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">待评审</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">待开发</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">开发中</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">待测试</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">测试中</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node end">已完成</div>
+                    </div>
+                </div>
+
+                <div class="workflow-section">
+                    <div class="workflow-title">
+                        <div class="workflow-title-icon" style="background: rgba(163, 113, 247, 0.2);">🎨</div>
+                        美术资产工作流
+                    </div>
+                    <div class="workflow-flow">
+                        <div class="flow-node start">概念设计</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">建模中</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">贴图/材质</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">绑定/动画</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">内审中</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node end">已验收</div>
+                    </div>
+                </div>
+
+                <div class="workflow-section">
+                    <div class="workflow-title">
+                        <div class="workflow-title-icon" style="background: rgba(63, 185, 80, 0.2);">🐛</div>
+                        缺陷工作流
+                    </div>
+                    <div class="workflow-flow">
+                        <div class="flow-node start">新建</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">已确认</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">已分配</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">修复中</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node mid">待验证</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-node end">已关闭</div>
+                    </div>
+                </div>
+
+                <div class="field-grid" style="margin-top: 2rem;">
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(210, 153, 34, 0.2);">⚙️</div>
+                            <div class="field-card-title">流转规则配置</div>
+                        </div>
+                        <div class="field-card-body">
+                            <ul style="font-size: 0.9rem; color: var(--text-secondary); padding-left: 1.25rem;">
+                                <li style="margin-bottom: 0.5rem;">只有QA可以关闭BUG</li>
+                                <li style="margin-bottom: 0.5rem;">策划Lead批准策划文档</li>
+                                <li style="margin-bottom: 0.5rem;">美术总监验收美术资产</li>
+                                <li>标记为"已完成"时，必须填写实际花费工时</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="field-card">
+                        <div class="field-card-header">
+                            <div class="field-card-icon" style="background: rgba(88, 166, 255, 0.2);">🤖</div>
+                            <div class="field-card-title">自动化规则</div>
+                        </div>
+                        <div class="field-card-body">
+                            <ul style="font-size: 0.9rem; color: var(--text-secondary); padding-left: 1.25rem;">
+                                <li style="margin-bottom: 0.5rem;">BUG修复后自动通知QA验证</li>
+                                <li style="margin-bottom: 0.5rem;">Sprint结束后自动移入下个Sprint</li>
+                                <li>逾期任务自动发送提醒通知</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab 6: Case Study -->
+        <div class="tab-content" id="case">
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">实战案例</h2>
+                    <p class="section-desc">Sprint 12 - 战斗系统优化的完整执行记录</p>
+                </div>
+
+                <div class="case-study">
+                    <div class="case-header">
+                        <div class="case-label">Sprint 复盘</div>
+                        <h3 class="case-title">战斗系统优化 Sprint</h3>
+                        <div class="case-meta">2026.05.12 - 2026.05.25 · 2周 · 4人核心团队</div>
+                    </div>
+
+                    <div class="case-stats">
+                        <div class="case-stat">
+                            <div class="case-stat-value" style="color: var(--accent-blue);">10</div>
+                            <div class="case-stat-label">计划任务</div>
+                        </div>
+                        <div class="case-stat">
+                            <div class="case-stat-value" style="color: var(--accent-green);">8</div>
+                            <div class="case-stat-label">完成任务</div>
+                        </div>
+                        <div class="case-stat">
+                            <div class="case-stat-value" style="color: var(--gold);">80%</div>
+                            <div class="case-stat-label">完成率</div>
+                        </div>
+                        <div class="case-stat">
+                            <div class="case-stat-value" style="color: var(--accent-red);">2</div>
+                            <div class="case-stat-label">遗留项</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 2rem;">
+                        <div style="background: var(--bg-secondary); padding: 1.25rem; border-radius: 12px;">
+                            <div style="font-weight: 600; margin-bottom: 1rem; color: var(--accent-green);">✓ 达成目标</div>
+                            <ul style="font-size: 0.9rem; color: var(--text-secondary); padding-left: 1.25rem;">
+                                <li style="margin-bottom: 0.5rem;">完成战斗系统V2.0设计文档</li>
+                                <li style="margin-bottom: 0.5rem;">实现格挡反击核心逻辑</li>
+                                <li style="margin-bottom: 0.5rem;">Boss外观终版交付</li>
+                                <li>修复3个P0级BUG</li>
+                            </ul>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 1.25rem; border-radius: 12px;">
+                            <div style="font-weight: 600; margin-bottom: 1rem; color: var(--accent-orange);">⚠ 遗留项</div>
+                            <ul style="font-size: 0.9rem; color: var(--text-secondary); padding-left: 1.25rem;">
+                                <li style="margin-bottom: 0.5rem;">主角8方向待机动画（美术资源延期）</li>
+                                <li>Boss战功能测试用例（顺延至Sprint 13）</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-secondary); padding: 1.25rem; border-radius: 12px; margin-top: 1.5rem;">
+                        <div style="font-weight: 600; margin-bottom: 1rem;">📊 Sprint回顾数据</div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.9rem;">
+                            <div>
+                                <div style="color: var(--text-muted); margin-bottom: 0.25rem;">预估工时</div>
+                                <div>32 人天</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-muted); margin-bottom: 0.25rem;">实际工时</div>
+                                <div>28 人天</div>
+                            </div>
+                            <div>
+                                <div style="color: var(--text-muted); margin-bottom: 0.25rem;">团队速率</div>
+                                <div style="color: var(--accent-green);">+12.5% ↑</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="expandable open" id="expandable3">
+                    <div class="expandable-header" onclick="toggleExpand('expandable3')">
+                        <div class="expandable-title">
+                            <span>📋 Sprint执行过程记录</span>
+                        </div>
+                        <div class="expandable-arrow">▼</div>
+                    </div>
+                    <div class="expandable-content">
+                        <div class="expandable-body">
+                            <div style="border-left: 2px solid var(--gold); padding-left: 1rem; margin-bottom: 1rem;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Day 1 - Sprint启动</div>
+                                <div style="font-size: 0.9rem;">召开Sprint规划会议，确认10个故事点分配到4位成员，明确验收标准。</div>
+                            </div>
+                            <div style="border-left: 2px solid var(--accent-blue); padding-left: 1rem; margin-bottom: 1rem;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Day 3 - 风险预警</div>
+                                <div style="font-size: 0.9rem;">美术资产进度滞后，主角待机动画可能无法按时交付。PM立即协调资源，将任务拆分给两名动画师并行处理。</div>
+                            </div>
+                            <div style="border-left: 2px solid var(--accent-green); padding-left: 1rem; margin-bottom: 1rem;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Day 7 - 中期检查</div>
+                                <div style="font-size: 0.9rem;">完成率50%，进度符合预期。格挡反击逻辑提前1天完成，获得策划认可。</div>
+                            </div>
+                            <div style="border-left: 2px solid var(--accent-orange); padding-left: 1rem;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Day 10 - Sprint收尾</div>
+                                <div style="font-size: 0.9rem;">完成率80%，2项遗留项顺延至下个Sprint。召开回顾会议，记录经验教训。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tab 7: Best Practices -->
+        <div class="tab-content" id="practices">
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">最佳实践总结</h2>
+                    <p class="section-desc">单机游戏研发Sprint管理的核心经验与避坑指南</p>
+                </div>
+
+                <div class="practices-grid">
+                    <div class="practice-card">
+                        <div class="practice-header">
+                            <div class="practice-icon sprint">🔄</div>
+                            <div class="practice-title">灵活调整Sprint节奏</div>
+                        </div>
+                        <div class="practice-desc">预制作阶段用1周Sprint保持高频迭代；进入全面制作后切换为2-4周Sprint，确保稳定的交付节奏。游戏开发的不确定性要求我们具备快速调整的能力。</div>
+                    </div>
+
+                    <div class="practice-card">
+                        <div class="practice-header">
+                            <div class="practice-icon milestone">🎯</div>
+                            <div class="practice-title">里程碑驱动开发</div>
+                        </div>
+                        <div class="practice-desc">明确Vertical Slice / Alpha / Beta / GM四大里程碑，每个里程碑设定明确的验收标准和交付物。里程碑是团队奋斗的目标，也是衡量进度的重要标尺。</div>
+                    </div>
+
+                    <div class="practice-card">
+                        <div class="practice-header">
+                            <div class="practice-icon collaboration">🤝</div>
+                            <div class="practice-title">跨职能daily sync</div>
+                        </div>
+                        <div class="practice-desc">策划、程序、美术、QA每日同步进度，识别阻塞项。TAPD故事墙可视化工作状态，减少沟通成本。每个团队成员的进度对所有人透明可见。</div>
+                    </div>
+
+                    <div class="practice-card">
+                        <div class="practice-header">
+                            <div class="practice-icon quality">🎯</div>
+                            <div class="practice-title">缺陷分级处理</div>
+                        </div>
+                        <div class="practice-desc">P0/BUG需立即响应；普通缺陷按Sprint规划修复；优化建议入池排队，避免无序变更影响进度。质量是底线，但不能为了质量牺牲进度。</div>
+                    </div>
+
+                    <div class="practice-card">
+                        <div class="practice-header">
+                            <div class="practice-icon document">📄</div>
+                            <div class="practice-title">文档与任务联动</div>
+                        </div>
+                        <div class="practice-desc">策划文档评审通过后再创建开发任务；技术设计文档关联具体程序任务，确保开发有据可依。文档是团队协作的纽带，也是知识传承的载体。</div>
+                    </div>
+
+                    <div class="practice-card">
+                        <div class="practice-header">
+                            <div class="practice-icon retro">📊</div>
+                            <div class="practice-title">Sprint复盘持续改进</div>
+                        </div>
+                        <div class="practice-desc">每个Sprint结束后统计速率、分析延期原因、优化流程。记录经验教训，避免重复踩坑。复盘不是为了追责，而是为了持续进步。</div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; margin-top: 2rem;">
+                    <h3 style="font-size: 1.2rem; margin-bottom: 1rem; text-align: center;">方案核心价值</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; text-align: center;">
+                        <div>
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">数据驱动</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">燃尽图、速率统计<br>量化团队表现</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">流程标准化</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">多轨工作流<br>职责清晰可见</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔗</div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">跨职能协作</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">策划/程序/美术/QA<br>无缝对接</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚀</div>
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">持续改进</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Sprint复盘<br>迭代优化</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Task Detail Panel -->
+    <div class="task-detail-overlay" id="taskOverlay" onclick="closeTaskDetail()"></div>
+    <div class="task-detail-panel" id="taskPanel">
+        <div class="task-detail-header">
+            <div>
+                <div style="font-size: 0.8rem; color: var(--accent-blue); margin-bottom: 0.25rem;" id="taskDetailId">Task #156</div>
+                <div style="font-size: 1rem; font-weight: 600;" id="taskDetailTitle">实现格挡反击逻辑</div>
+            </div>
+            <button class="task-detail-close" onclick="closeTaskDetail()">×</button>
+        </div>
+        <div class="task-detail-body">
+            <div class="task-detail-meta">
+                <div class="meta-item">
+                    <div class="meta-label">状态</div>
+                    <div class="meta-value"><span class="status-badge" style="background: rgba(255, 215, 0, 0.2); color: var(--gold);">开发中</span></div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">优先级</div>
+                    <div class="meta-value"><span class="priority-tag p0">P0</span></div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">负责人</div>
+                    <div class="meta-value">王程序</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">预估工时</div>
+                    <div class="meta-value">3 人天</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">任务描述</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+                    实现玩家格挡成功后0.3秒内按攻击键触发的反击逻辑。反击造成1.5倍伤害，播放专属反击动画，触发屏幕震动效果。
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">验收标准</div>
+                <ul style="font-size: 0.9rem; color: var(--text-secondary); padding-left: 1.25rem;">
+                    <li style="margin-bottom: 0.25rem;">格挡成功后0.3秒窗口期可触发反击</li>
+                    <li style="margin-bottom: 0.25rem;">反击伤害为普攻1.5倍</li>
+                    <li style="margin-bottom: 0.25rem;">反击动画播放时长约0.5秒</li>
+                    <li>屏幕震动幅度与Boss血量相关</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">关联需求</div>
+                <div style="font-size: 0.85rem; color: var(--accent-blue);">Story #125 - 战斗系统V2.0设计文档</div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 2rem;">
+                <button class="btn btn-secondary" style="flex: 1;">编辑</button>
+                <button class="btn btn-primary" style="flex: 1;">完成任务</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>单机游戏研发项目管理方案 · 基于TAPD平台</p>
+    </footer>
+
+    <script>
+        // Tab Navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Expandable Sections
+        function toggleExpand(id) {
+            document.getElementById(id).classList.toggle('open');
+        }
+
+        // Task Detail Panel
+        function openTaskDetail(taskId) {
+            document.getElementById('taskOverlay').classList.add('open');
+            document.getElementById('taskPanel').classList.add('open');
+        }
+
+        function closeTaskDetail() {
+            document.getElementById('taskOverlay').classList.remove('open');
+            document.getElementById('taskPanel').classList.remove('open');
+        }
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeTaskDetail();
+            }
+        });
+    </script>
+</body>
+</html>
