@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>钱天翼 (Eric) — 战略运营</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-bg: #efebe5;
+    --color-bg-secondary: #ffffff;
+    --color-text: #000000;
+    --color-text-secondary: #666666;
+    --color-accent: #0000ee;
+    --color-border: #f7f2ea;
+    --shadow-sm: 0px 1px 4px 0px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0px 2px 16px 0px rgba(0, 0, 0, 0.1);
+    --radius: 20px;
+    --radius-sm: 16px;
+    --space: 80px;
+    --font-heading: 'Source Serif 4', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.65;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    position: fixed; top: 0; left: 0; width: 0%; height: 2px;
+    z-index: 200; background: var(--color-accent);
+    transition: width 0.05s linear;
+  }
+
+  /* Fade animation */
+  .fade-section {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.65s ease-out, transform 0.65s ease-out;
+  }
+  .fade-section.visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) {
+    .fade-section { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* Nav */
+  .nav-bar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(239, 235, 229, 0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--color-border);
+    padding: 10px 0;
+  }
+  .nav-bar.scrolled { box-shadow: var(--shadow-sm); }
+  .nav-inner {
+    max-width: 860px; margin: 0 auto; padding: 0 36px;
+    display: flex; justify-content: center; gap: 4px; flex-wrap: wrap;
+  }
+  .nav-link {
+    font-family: var(--font-body);
+    font-size: 12px; font-weight: 500;
+    color: var(--color-text-secondary); text-decoration: none;
+    padding: 6px 18px; border-radius: var(--radius-sm);
+    transition: all 0.25s;
+  }
+  .nav-link:hover { color: var(--color-text); background: rgba(0,0,238,0.06); }
+  .nav-link.active { color: var(--color-accent); background: rgba(0,0,238,0.08); font-weight: 600; }
+
+  /* Container */
+  .container {
+    max-width: 860px; margin: 0 auto; padding: var(--space) 36px;
+    position: relative; z-index: 1;
+  }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 48px 0 40px;
+    margin-bottom: 32px;
+  }
+  .hero-name {
+    font-family: var(--font-heading);
+    font-size: 48px; font-weight: 500; letter-spacing: -1.5px;
+    color: var(--color-text);
+    margin-bottom: 6px;
+  }
+  .hero-title {
+    font-size: 16px; color: var(--color-text-secondary);
+    letter-spacing: 3px; margin-bottom: 20px;
+  }
+  .hero-contact {
+    display: flex; justify-content: center; align-items: center;
+    gap: 24px; flex-wrap: wrap;
+    font-size: 13px; color: var(--color-text-secondary);
+  }
+  .hero-contact-item { display: flex; align-items: center; gap: 6px; }
+  .hero-contact-icon { color: var(--color-accent); }
+  .mbti-pill {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    color: var(--color-accent);
+    background: rgba(0,0,238,0.08);
+    border-radius: 12px;
+    padding: 3px 12px;
+    letter-spacing: 1px;
+  }
+
+  /* Section */
+  .section { margin-bottom: 56px; scroll-margin-top: 70px; }
+
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px;
+  }
+  .section-num {
+    font-family: var(--font-heading);
+    font-size: 14px; font-weight: 600;
+    color: var(--color-accent); opacity: 0.6;
+    min-width: 20px;
+  }
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -0.5px; color: var(--color-text);
+  }
+
+  /* Summary */
+  .summary-block {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    box-shadow: var(--shadow-sm);
+    font-size: 14px; color: var(--color-text-secondary);
+    line-height: 1.78;
+    margin-bottom: 8px;
+  }
+  .summary-block strong { color: var(--color-text); font-weight: 600; }
+
+  /* Work */
+  .job { margin-bottom: 40px; }
+  .job-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    flex-wrap: wrap; gap: 8px; margin-bottom: 4px;
+  }
+  .company-name {
+    font-family: var(--font-heading);
+    font-size: 20px; font-weight: 600; color: var(--color-text);
+    letter-spacing: -0.3px;
+  }
+  .job-meta { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; }
+  .job-role-line {
+    font-size: 14px; font-weight: 500;
+    color: var(--color-accent);
+    margin-bottom: 16px;
+  }
+
+  .project {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    border-left: 3px solid var(--color-accent);
+    transition: box-shadow 0.25s;
+  }
+  .project:hover { box-shadow: var(--shadow-md); }
+  .project-name {
+    font-size: 14px; font-weight: 600; color: var(--color-text);
+    margin-bottom: 6px;
+  }
+  .project-desc {
+    font-size: 13px; color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+  .project-desc strong { color: var(--color-text); font-weight: 600; }
+
+  /* Education */
+  .edu-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 24px; margin-bottom: 16px; padding: 20px 24px;
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+  .edu-main { flex: 1; }
+  .uni-name {
+    font-family: var(--font-heading);
+    font-size: 17px; font-weight: 600; color: var(--color-text);
+    margin-bottom: 2px;
+  }
+  .degree { font-size: 14px; color: var(--color-accent); font-weight: 500; }
+  .edu-meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+  .edu-courses { font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.5; }
+  .edu-honors { margin-top: 6px; font-size: 11px; color: var(--color-accent); opacity: 0.8; }
+  .edu-side { text-align: right; min-width: 80px; flex-shrink: 0; }
+  .gpa-value {
+    font-family: var(--font-heading);
+    font-size: 26px; font-weight: 600; color: var(--color-accent);
+    line-height: 1;
+  }
+  .gpa-label { font-size: 10px; color: var(--color-text-secondary); letter-spacing: 1px; }
+
+  /* Research */
+  .research-item {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+    padding: 18px 24px; margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    border-left: 3px solid var(--color-accent);
+  }
+  .research-title { font-size: 14px; font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
+  .research-meta { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .research-desc { font-size: 13px; color: var(--color-text-secondary); line-height: 1.65; }
+  .research-desc strong { color: var(--color-text); font-weight: 600; }
+
+  /* Skills */
+  .skill-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .skill-box {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .skill-label {
+    font-family: var(--font-heading);
+    font-size: 14px; font-weight: 600; color: var(--color-accent);
+    margin-bottom: 4px;
+  }
+  .skill-items { font-size: 12.5px; color: var(--color-text-secondary); line-height: 1.55; }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 32px 0;
+    margin-top: 40px;
+    border-top: 1px solid var(--color-border);
+  }
+  .footer-text {
+    font-family: var(--font-heading);
+    font-size: 15px; font-style: italic;
+    color: var(--color-text-secondary);
+  }
+
+  /* Back to top */
+  .back-to-top {
+    position: fixed; bottom: 28px; right: 28px; z-index: 100;
+    width: 44px; height: 44px;
+    background: var(--color-bg-secondary); border: 1px solid var(--color-border);
+    border-radius: 12px; box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0; pointer-events: none;
+    transition: all 0.3s;
+  }
+  .back-to-top.visible { opacity: 1; pointer-events: auto; }
+  .back-to-top:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  .back-to-top svg {
+    width: 18px; height: 18px;
+    stroke: var(--color-accent); stroke-width: 2.5; fill: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .container { padding: 40px 18px; }
+    .nav-inner { padding: 0 18px; gap: 2px; }
+    .nav-link { font-size: 11px; padding: 5px 12px; }
+    .hero-name { font-size: 34px; letter-spacing: -1px; }
+    .section-title { font-size: 19px; }
+    .skill-grid { grid-template-columns: 1fr; }
+    .edu-row { flex-direction: column; }
+    .edu-side { text-align: left; }
+    .job-header { flex-direction: column; }
+    .summary-block { padding: 20px; }
+    .company-name { font-size: 17px; }
+  }
+
+  @media (min-width: 1440px) {
+    .container { max-width: 960px; }
+    .nav-inner { max-width: 960px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Nav -->
+<nav class="nav-bar" id="navBar">
+  <div class="nav-inner">
+    <a href="#experience" class="nav-link active">Experience</a>
+    <a href="#education" class="nav-link">Education</a>
+    <a href="#research" class="nav-link">Research</a>
+    <a href="#skills" class="nav-link">Skills</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-name">Eric Qian</div>
+    <div class="hero-title">STRATEGY & OPERATIONS</div>
+    <div class="hero-contact">
+      <span class="hero-contact-item"><span class="hero-contact-icon">&#9742;</span> +86 18710189908</span>
+      <span class="hero-contact-item"><span class="hero-contact-icon">&#9993;</span> qiantianyi1999@hotmail.com</span>
+      <span class="mbti-pill">ISTP</span>
+    </div>
+  </header>
+
+  <!-- Summary -->
+  <div class="section fade-section">
+    <div class="summary-block">
+        <p>
+        具备<strong>战略执行、AI系统交付与项目运营</strong>的复合型从业者。现于AI创业企业统筹企业级AI作业系统全生命周期交付与投融资支持，擅长将战略决策拆解为可落地的运营动作，在<strong>跨部门协同、合规管理、客户关系维护</strong>等核心场景中持续推动成果产出。海外留学背景提供英语工作语言能力，熟悉AI工具链并善于利用技术手段提升运营效率。
+        </p>
+    </div>
+  </div>
+
+  <!-- Work Experience -->
+  <div class="section" id="experience">
+    <div class="section-header">
+      <span class="section-num">I</span>
+      <span class="section-title">Work Experience</span>
+    </div>
+
+    <!-- 律光 -->
+    <div class="job fade-section">
+      <div class="job-header">
+        <span class="company-name">北京律光智能科技有限公司</span>
+        <span class="job-meta">Beijing &middot; 2026.01 – Present</span>
+      </div>
+      <div class="job-role-line">商业与战略分析师</div>
+
+      <div class="project">
+        <div class="project-name">投融资推进与战略协作</div>
+        <p class="project-desc">
+          独立搭建<strong>财务预测模型与竞品分析报告</strong>，持续更新融资材料与路演PPT，完成英文版翻译与内容强化。协助外部事务所开展尽调工作，参与多家资本方来访会议，根据反馈迭代融资方案与配套材料。直接支撑投融资全过程。
+        </p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">企业级AI系统交付与LLM供应商对接</div>
+        <p class="project-desc">
+          为重要客户部署定制化AI作业系统，担任从项目启动至商务推广的<strong>全周期负责人</strong>。统筹算力采购咨询与供应商对接，推动<strong>3批次成功上线</strong>，客户团队已独立操作系统运行。基于项目成果向客户推荐长期合作方案，二期评估已启动。建立跨部门协作机制，协调技术、产品与客户三方，确保交付节奏与验收标准对齐。
+        </p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">知识产权与合规项目管理</div>
+        <p class="project-desc">
+          牵头科技资质申报与<strong>大模型备案全流程</strong>项目管理。规划并监督产品与技术团队的文档准备工作（推进<strong>8项软著提审 + 5项发明专利筹备</strong>）；推进信息系统安全等级保护测评与大模型备案；规划<strong>企业资质申报</strong>工作。建立专项排期表协调内外部会议时间，各环节有序推进。
+        </p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">国企客户AI赋能转型方案设计与推进</div>
+        <p class="project-desc">
+          负责某国有银行客户的<strong>AI赋能转型方案设计</strong>。深入调研业务痛点后输出《接口对接/私有化部署流程》；明确<strong>7周交付周期</strong>并拆分阶段性关键节点与验收标准。项目方案已通过客户总部审批，正式进入落地实施阶段。
+        </p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">AI产品运营与需求迭代管理</div>
+        <p class="project-desc">
+          作为基于开源大模型微调的场景化AI应用的<strong>产品运营负责人</strong>，建立需求池分级管理机制（紧急度/影响面/业务价值三维定优先级）。从业务场景角度收集Bug反馈与功能优化需求，协调技术-产品-客户三方对接。协助<strong>1个大版本 + 6次小迭代</strong>的全周期更新，核心功能交付节奏整体可控。
+        </p>
+      </div>
+    </div>
+
+    <!-- 中信建投 -->
+    <div class="job fade-section" style="margin-bottom:0">
+      <div class="job-header">
+        <span class="company-name">中信建投证券股份有限公司</span>
+        <span class="job-meta">Beijing &middot; 2021.10 – 2022.02</span>
+      </div>
+      <div class="job-role-line">投资银行部实习生 &middot; 项目组核心成员 / 6人实习生团队负责人</div>
+
+      <div class="project">
+        <div class="project-name">团队管理与交付品控</div>
+        <p class="project-desc">
+          担任<strong>6人实习小组负责人</strong>，负责新人入职培训与任务分配（按能力匹配尽调/底稿/研究模块化分工）；建立交付物验收标准，逐份审核组员产出并给出结构化修改反馈。团队保持高质量产出，终稿一次性通过率显著提升。
+        </p>
+      </div>
+
+      <div class="project">
+        <div class="project-name">上市公司并购重组资产分析与估值</div>
+        <p class="project-desc">
+          深度参与某退市标的并购重组全流程。运用<strong>DCF、可比公司分析法</strong>进行目标资产抵押分析与估值建模；完成尽调调查底稿整理与核查。输出资产价值核心结论，直接支撑并购方案搭建与决策。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Education -->
+  <div class="section" id="education">
+    <div class="section-header">
+      <span class="section-num">II</span>
+      <span class="section-title">Education</span>
+    </div>
+
+    <div class="edu-row fade-section">
+      <div class="edu-main">
+        <div class="uni-name">University of Edinburgh</div>
+        <div class="degree">理学硕士 &middot; 商业分析 (Merit)</div>
+        <div class="edu-meta">Edinburgh, UK &middot; 2022.09 – 2024.07</div>
+        <div class="edu-courses">Python编程 &middot; 数据分析原理 &middot; 预测性分析与机器学习 &middot; 产业组织理论 &middot; 随机优化 &middot; 模拟建模与分析</div>
+      </div>
+      <div class="edu-side">
+        <div class="gpa-value">Merit</div>
+        <div class="gpa-label">DISTINCTION</div>
+      </div>
+    </div>
+
+    <div class="edu-row fade-section" style="margin-bottom:0">
+      <div class="edu-main">
+        <div class="uni-name">University of California, Irvine</div>
+        <div class="degree">双学士 &middot; 数学 (B.Sc.) + 经济学 (B.A.)</div>
+        <div class="edu-meta">Irvine, CA, USA &middot; 2017.09 – 2021.06</div>
+        <div class="edu-courses">金融数学 &middot; 计量经济学 &middot; 概率论 &middot; 金融模型 &middot; 公司财务</div>
+        <div class="edu-honors">Pi Mu Epsilon 成员 &middot; Cum Laude &middot; Dean's Honors List &times;7</div>
+      </div>
+      <div class="edu-side">
+        <div class="gpa-value">3.71</div>
+        <div class="gpa-label">GPA / 4.0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Research -->
+  <div class="section" id="research">
+    <div class="section-header">
+      <span class="section-num">III</span>
+      <span class="section-title">Research</span>
+    </div>
+
+    <div class="research-item fade-section">
+      <div class="research-title">稳定币波动性分析 — Terra-Luna崩盘事件研究</div>
+      <div class="research-meta">University of Edinburgh &middot; 2024 Spring</div>
+      <div class="research-desc">
+        以2022年Terra-Luna算法稳定币崩盘事件为切入点，构建技术-市场-监管三维分析框架，运用<strong>GARCH模型</strong>量化评估不同抵押机制稳定币在极端市场事件中的抗风险能力。独立完成CoinAPI数据采集、模型构建与实证分析完整链路。核心发现：资产抵押型稳定币（USDC/USDT）展现出强抗风险能力；算法稳定币崩盘显著加剧了BTC/ETH短期波动，但未对传统稳定币造成结构性冲击。
+      </div>
+    </div>
+
+    <div class="research-item fade-section">
+      <div class="research-title">L-3 Communications 股权投资研究</div>
+      <div class="research-meta">University of California, Irvine &middot; Winter 2021</div>
+      <div class="research-desc">
+        运用<strong>CAPM、P/E、EV/EBITDA</strong>等多重估值方法对NASDAQ上市公司L-3 Communications进行投资分析，深入理解资产价值核心驱动因素。
+      </div>
+    </div>
+
+    <div class="research-item fade-section" style="margin-bottom:0">
+      <div class="research-title">NLP情感分析与可视化报告</div>
+      <div class="research-meta">University of Edinburgh &middot; 2022 Semester 1</div>
+      <div class="research-desc">
+        基于API数据采集，运用<strong>Pandas/Numpy</strong>清洗建模，应用词云与语义情感分析生成可视化报告。从数据抓取到结论呈现全流程独立完成。
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills -->
+  <div class="section" id="skills">
+    <div class="section-header">
+      <span class="section-num">IV</span>
+      <span class="section-title">Skills</span>
+    </div>
+
+    <div class="skill-grid">
+      <div class="skill-box">
+        <div class="skill-label">战略与运营</div>
+        <div class="skill-items">财务预测建模 &middot; 竞品分析 &middot; BP撰写与迭代 &middot; 尽调协作 &middot; 合作框架设计 &middot; 全周期项目管理</div>
+      </div>
+      <div class="skill-box">
+        <div class="skill-label">项目管理</div>
+        <div class="skill-items">TAPD &middot; Jira &middot; 敏捷迭代 &middot; 跨部门协同 &middot; 需求分级管理 &middot; 交付品控</div>
+      </div>
+      <div class="skill-box">
+        <div class="skill-label">AI 工具链</div>
+        <div class="skill-items">开源大模型部署与微调 &middot; 飞书Agent搭建 &middot; AI辅助结构化写作 &middot; Python数据分析</div>
+      </div>
+      <div class="skill-box">
+        <div class="skill-label">商务与工具</div>
+        <div class="skill-items">客户关系管理 &middot; 合同洽谈 &middot; 跨国团队协作 &middot; 资本方对接经验</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+  </footer>
+
+</div>
+
+<!-- Back to Top -->
+<button class="back-to-top" id="backToTop" title="Back to top">
+  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
+
+<script>
+(function(){
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); }});
+  }, {threshold: 0.08});
+  document.querySelectorAll('.fade-section').forEach(function(el){ obs.observe(el); });
+})();
+
+(function(){
+  var bar = document.getElementById('progressBar');
+  window.addEventListener('scroll',function(){
+    var pct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) * 100;
+    bar.style.width = (pct > 0 ? pct : 0) + '%';
+  },{passive:true});
+})();
+
+(function(){
+  var secs = document.querySelectorAll('.section[id]');
+  var links = document.querySelectorAll('.nav-link');
+  var nav = document.getElementById('navBar');
+  window.addEventListener('scroll',function(){
+    var pos = window.scrollY + 100;
+    secs.forEach(function(s){
+      if (pos >= s.offsetTop && pos < s.offsetTop + s.offsetHeight) {
+        var id = s.getAttribute('id');
+        links.forEach(function(l){
+          l.classList.remove('active');
+          if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+        });
+      }
+    });
+  },{passive:true});
+})();
+
+(function(){
+  var btn = document.getElementById('backToTop');
+  window.addEventListener('scroll',function(){
+    btn.classList[window.scrollY > 400 ? 'add' : 'remove']('visible');
+  },{passive:true});
+  btn.addEventListener('click',function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+})();
+</script>
+
+</body>
+</html>
